@@ -1,13 +1,22 @@
-use std::error::Error;
 use std::fs;
 use std::io;
 
-fn load_theta(path: &str) -> Result<(f64, f64), String> {
+fn load_theta(path: &str) -> Result<(f64, f64, f64, f64), String> {
     let content = fs::read_to_string(path).map_err(|_| format!("Impossible de lire {}. As-tu lancé l'entraînement ?", path))?;
     let mut parts = content.split_whitespace();
     let theta0 = parts.next().ok_or("theta0 manquant dans le fichier theta.txt")?.parse::<f64>().map_err(|_| "theta0 n'est pas un nombre valide".to_string())?;
     let theta1 = parts.next().ok_or("theta1 manquant dans le fichier theta.txt")?.parse::<f64>().map_err(|_| "theta1 n'est pas un nombre valide".to_string())?;
-    Ok((theta0, theta1))
+    let min = parts.next().ok_or("min manquant dans le fichier theta.txt")?.parse::<f64>().map_err(|_| "min n'est pas un nombre valide".to_string())?;
+    let max = parts.next().ok_or("max manquant dans le fichier theta.txt")?.parse::<f64>().map_err(|_| "max n'est pas un nombre valide".to_string())?;
+    Ok((theta0, theta1, min, max))
+}
+
+fn normalize(km: f64, min: f64, max: f64) -> f64 {
+    if (max - min).abs() < 1e-8 {
+        0.0
+    } else {
+        (km - min) / (max - min)
+    }
 }
 
 fn main() {
@@ -24,13 +33,14 @@ fn main() {
             return;
         }
     };
-    let (theta0, theta1) = match load_theta("theta.txt") {
+    let (theta0, theta1, min, max) = match load_theta("theta.txt") {
         Ok(t) => t,
         Err(e) => {
             eprintln!("Erreur lors du chargement de theta.txt : {}", e);
             return;
         }
     };
-    let price = theta0 + theta1 * km;
+    let norm_km = normalize(km, min, max);
+    let price = theta0 + theta1 * norm_km;
     println!("Prix estimé : {:.2} €", price);
 }
