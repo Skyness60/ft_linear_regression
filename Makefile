@@ -2,7 +2,7 @@
 # Simple Makefile pour débuter sur le projet ft_linear_regression
 
 IMAGE=linear
-DOCKER_RUN=docker run --rm -v $(PWD):/usr/src/app $(IMAGE)
+DOCKER_RUN=docker run --rm -v $(PWD):/usr/src/app
 
 .PHONY: help build train predict plot clean
 
@@ -18,13 +18,13 @@ build:
 	docker build -t $(IMAGE) .
 
 train: build
-	$(DOCKER_RUN)
+	$(DOCKER_RUN) $(IMAGE) cargo run --bin train --release
 
 predict: build
-	$(DOCKER_RUN) cargo run --bin predict
+	$(DOCKER_RUN) -it $(IMAGE) cargo run --bin predict --release
 
 plot: build
-	$(DOCKER_RUN) cargo run --bin plot
+	$(DOCKER_RUN) $(IMAGE) cargo run --bin plot
 
 clean:
 	rm -rf target plot.png theta.txt
